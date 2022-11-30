@@ -1,0 +1,6 @@
+[submodule "vanttec_controllers"]
+	path = vanttec_controllers
+	url = https://github.com/vanttec/vanttec_controllers.git
+[submodule "vanttec_msgs"]
+	path = vanttec_msgs
+	url = https://github.com/vanttec/vanttec_msgs.git
