@@ -49,8 +49,8 @@ int main(int argc, char **argv){
 
     // Stanley controller params
     float delta_max = 1;
-    float k = 5;
-    float k_soft = 0;
+    float k = 0.3;
+    float k_soft = 1;
 
     // PD controller gains
     float kp = 1;
