@@ -5,7 +5,7 @@
  * @email: sebas.martp@gmail.com
  * 
  * @brief: control node for a car casded guidance-control scheme.
- *         The guidance law is an implementation of a simple Stanley controller
+ *         The guidance law is an implementation of a simple los controller
  *         that provides a desired steering angle.
  *         The low level controller takes as inputs the steering command and a 
  *         user defined velocity, and generates a force to move the vehicle.
@@ -20,14 +20,26 @@
 #include <std_msgs/Float32.h>
 #include <vanttec_msgs/SystemDynamics.h>
 #include <vanttec_msgs/ThrustControl.h>
+#include <vanttec_msgs/EtaPose.h>
 
-#include "stanley_controller.hpp"
 #include "pid.hpp"
 
 geometry_msgs::Twist car_velocity;
-// vanttec_msgs::SystemDynamics functions;
+vanttec_msgs::EtaPose car_pose;
 float f = 0;
 float g = 0;
+
+float calculatePathAngle(float x0, float y0, float x1, float y1){
+    float ex = x1 - x0;
+    float ey = y1 - y0;
+
+    // Angle of path frame
+    return std::atan2(ey,ex);
+}
+
+void poseCallback(const vanttec_msgs::EtaPose& pose){
+    car_pose = pose;
+}
 
 void velCallback(const geometry_msgs::Twist& vel){
     car_velocity = vel;
@@ -47,11 +59,6 @@ int main(int argc, char **argv){
     vanttec_msgs::ThrustControl u;
     nav_msgs::Path path;
 
-    // Stanley controller params
-    float delta_max = 1;
-    float k = 5;
-    float k_soft = 0;
-
     // PD controller gains
     float kp = 1;
     float kd = 1;
@@ -61,20 +68,23 @@ int main(int argc, char **argv){
     float y0 = -10;
     float x1 = 0;
     float y1 = 10;
+    float beta;
 
-    ros::init(argc, argv, "stanley_controller");
+    float error = 0;
+
+    float DELTA_MAX = 100;
+
+    ros::init(argc, argv, "sdv_controller");
     ros::NodeHandle nh("~");
 
     nh.getParam("node_frequency",frequency);    
     ros::Rate cycle_rate(frequency);
 
-    StanleyController stanley(delta_max, k, k_soft);
     PID pid(float(1.0/frequency), kp, 0, kd, 340, LINEAR_DOF);
     
-    ros::Subscriber  stanley_heading = nh.subscribe("/car_simulation/dynamic_model/eta_pose", 
-                                                    10, 
-                                                    &StanleyController::setHeading,
-                                                    &stanley);
+    ros::Subscriber  car_eta = nh.subscribe("/car_simulation/dynamic_model/eta_pose", 
+                                                    1, 
+                                                    poseCallback);
     ros::Subscriber car_vel = nh.subscribe("/car_simulation/dynamic_model/vel", 1, velCallback);
     ros::Subscriber car_dynamics    = nh.subscribe("/car_simulation/dynamic_model/non_linear_functions", 1, 
                                                     dynamicsCallback);
@@ -88,16 +98,23 @@ int main(int argc, char **argv){
         /* Run Queued Callbacks */
         ros::spinOnce();
 
-        /* Stanley controller */
-        stanley.calculateCrosstrackError(x0,y0,x1,y1);
-        // v_norm = std::sqrt(std::pow(car_velocity.linear.x,2) + std::pow(car_velocity.linear.y,2));
-        stanley.calculateSteering(car_velocity.linear.x);
-        delta.data = stanley.delta_;
+        beta = calculatePathAngle(car_pose.x,car_pose.y,x0,y0);
+        delta.data = -(car_pose.psi - beta);
+        ROS_INFO_STREAM("beta "<<beta);
+        ROS_INFO_STREAM("delta "<<delta.data);
+        ROS_INFO_STREAM("psi "<<car_pose.psi);
+        
+        if (delta.data >= DELTA_MAX)
+            delta.data = DELTA_MAX;
+        else if (delta.data <= -DELTA_MAX)
+            delta.data = -DELTA_MAX;
+
         car_steering.publish(delta);
 
         /* PD controller */
+        // error = std::sqrt(std::pow(x0 - car_pose.x,2) + std::pow(y0 - car_pose.y,2));
         pid.updateFunctions(f, g);
-        pid.updateSetpoint(4,0);
+        pid.updateSetpoint(3,0);
         pid.calculateManipulation(car_velocity.linear.x);
         u.tau_x = pid.u_;
         car_force.publish(u);

@@ -1,11 +1,13 @@
 <launch>
+    <arg name="frequency" value="200"/>
 
     <include file="$(find sdv_control)/launch/car_model.launch"/>
 
-    <node name="stanley_control_node" pkg="sdv_control" type="stanley_controller_node" output="screen"/>
+    <node name="cascaded_controller_node" pkg="sdv_control" type="cascaded_controller_node" output="screen">
+    <!-- <node name="los_cascaded_controller_node" pkg="sdv_control" type="los_cascaded_controller_node" output="screen"> -->
+    <!-- <node name="waypoint_controller_node" pkg="sdv_control" type="waypoint_controller_node" output="screen"> -->
+        <param name="node_frequency" value="$(arg frequency)" />
+    </node>
 
-    <!-- <node name="vtec_u4_pid_node" pkg="uuv_control" type="vtec_u4_pid_node">
-        <rosparam file="$(find uuv_control)/config/VTec_U4_PID_Gains.yaml"/>
-    </node> -->
 
 </launch>

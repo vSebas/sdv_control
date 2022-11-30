@@ -18,6 +18,7 @@ include_directories(
     vanttec_controllers/dynamic_models/ground_vehicles/include
     vanttec_controllers/simulation/include
     vanttec_controllers/controllers/guidance_laws/include
+    vanttec_controllers/controllers/feedback_linearization/PID_based/first_order/include
     # vanttec_controllers/controllers/feedback_linearization/PID_based/include
     # vanttec_controllers/controllers/feedback_linearization/SMC_based/ASMC/include
     # vanttec_controllers/controllers/feedback_linearization/SMC_based/ANTSMC/include
@@ -35,10 +36,22 @@ add_executable(car_simulation_node
     vanttec_controllers/dynamic_models/ground_vehicles/src/car_3dof_dynamic_model.cpp)
 target_link_libraries(car_simulation_node ${catkin_LIBRARIES})
 
-add_executable(stanley_controller_node
+add_executable(cascaded_controller_node
     src/controllers/cascaded_schemes/car_guidance_control.cpp
-    vanttec_controllers/controllers/guidance_laws/src/stanley_controller.cpp)
-target_link_libraries(stanley_controller_node ${catkin_LIBRARIES})
+    vanttec_controllers/controllers/guidance_laws/src/stanley_controller.cpp
+    vanttec_controllers/controllers/feedback_linearization/PID_based/first_order/src/pid.cpp)
+target_link_libraries(cascaded_controller_node ${catkin_LIBRARIES})
+
+# add_executable(los_cascaded_controller_node
+#     src/controllers/cascaded_schemes/car_los_guidance_control.cpp
+#     vanttec_controllers/controllers/guidance_laws/src/LOS.cpp
+#     vanttec_controllers/controllers/feedback_linearization/PID_based/first_order/src/pid.cpp)
+# target_link_libraries(los_cascaded_controller_node ${catkin_LIBRARIES})
+
+# add_executable(waypoint_controller_node
+#     src/controllers/cascaded_schemes/car_waypoint_control.cpp
+#     vanttec_controllers/controllers/feedback_linearization/PID_based/first_order/src/pid.cpp)
+# target_link_libraries(waypoint_controller_node ${catkin_LIBRARIES})
 
 # add_executable(vtec_u4_pid_node
 #     src/controllers/first_order/vtec_u4_pid_control_node.cpp
