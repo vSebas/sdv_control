@@ -14,10 +14,8 @@
 #include <ros/ros.h>
 #include <string.h>
 
-static const float SAMPLE_TIME_S = 0.01;
-
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv){
+    int frequency = 100;
     std::string parent_frame;
     std::string child_frame;
 
@@ -26,8 +24,9 @@ int main(int argc, char **argv)
     
     nh.param<std::string>("parent_frame", parent_frame, "world");
     nh.param<std::string>("child_frame", child_frame, "car");
+    nh.getParam("node_frequency",frequency);
 
-    ros::Rate cycle_rate(int(1 / SAMPLE_TIME_S));
+    ros::Rate cycle_rate(frequency);
     TF2Broadcaster tf_broadcaster(parent_frame, child_frame);
     
     ros::Publisher  car_path    = nh.advertise<nav_msgs::Path>("/car_simulation/car_tf_broadcast/car_path", 1000);
@@ -45,7 +44,7 @@ int main(int argc, char **argv)
         /* Publish Path */
         car_path.publish(tf_broadcaster.path);
         
-        /* Sleep for 10ms */
+        /* Sleep for N ms */
         cycle_rate.sleep();
     }
 

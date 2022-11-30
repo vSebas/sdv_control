@@ -18,12 +18,13 @@
 #include <stdio.h>
 
 int main(int argc, char **argv){
-    static const float SAMPLE_TIME_S = 0.01;
+    int frequency = 100;
     ros::init(argc, argv, "el_rasho_simulation_node");
-    ros::NodeHandle nh;
-        
-    ros::Rate cycle_rate(int(1 / SAMPLE_TIME_S));
-    Cafe car_model(SAMPLE_TIME_S);
+    ros::NodeHandle nh("~");
+
+    nh.getParam("node_frequency",frequency);    
+    ros::Rate cycle_rate(frequency);
+    Cafe car_model(float(1.0/frequency));
     vanttec_msgs::SystemDynamics  car_functions;
     
     ros::Publisher  car_accel     = nh.advertise<geometry_msgs::Vector3>("/vectornav/ins_3d/ins_acc", 10);
