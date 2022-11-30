@@ -1,0 +1,11 @@
+<launch>
+
+    <include file="$(find sdv_control)/launch/car_model.launch"/>
+
+    <node name="stanley_control_node" pkg="sdv_control" type="stanley_controller_node" output="screen"/>
+
+    <!-- <node name="vtec_u4_pid_node" pkg="uuv_control" type="vtec_u4_pid_node">
+        <rosparam file="$(find uuv_control)/config/VTec_U4_PID_Gains.yaml"/>
+    </node> -->
+
+</launch>
